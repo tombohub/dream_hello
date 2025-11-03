@@ -1,0 +1,8 @@
+lib: [
+  "_build/install/default/lib/dream_hello/META"
+  "_build/install/default/lib/dream_hello/dune-package"
+  "_build/install/default/lib/dream_hello/opam"
+]
+bin: [
+  "_build/install/default/bin/dream_hello"
+]
