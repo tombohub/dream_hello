@@ -1,34 +1,15 @@
-# Stage 1: Build the application
-FROM ocaml/opam:alpine-ocaml-5.3 as build
-
-# Install system dependencies
-RUN sudo apk add --update libev-dev openssl-dev postgresql-dev
-
-# Pull the latest OPAM repository updates
-RUN cd ~/opam-repository && git pull origin master && opam update
-
+# Stage 1
+FROM ocaml/opam:debian-ocaml-5.3 as build
+RUN sudo apt-get update && sudo apt-get install -y libev-dev libssl-dev
 WORKDIR /home/opam
-
-# Copy the project's opam file and install dependencies
-COPY --chown=opam:opam dream_hello.opam dream_hello.opam
-RUN opam install . --deps-only
-
-# Copy the rest of the application
+COPY --chown=opam:opam dream_hello.opam .
+RUN opam install . --deps-only -y
 COPY --chown=opam:opam . .
-
-# Build the project
 RUN opam exec -- dune build @install --profile=release
 
-# Stage 2: Create the runtime image
-FROM alpine:3.18 as run
-
-# Install runtime dependencies
-RUN apk add --update libev postgresql-libs
-
-# Copy the compiled binary from the build stage
+# Stage 2
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y libev4 libssl3 && rm -rf /var/lib/apt/lists/*
 COPY --from=build /home/opam/_build/default/bin/main.exe /bin/server
-
-# Make sure the server is executable
-RUN chmod +x /bin/server
-
-ENTRYPOINT ["/bin/server"]
+EXPOSE 8080
+CMD ["/bin/server"]
